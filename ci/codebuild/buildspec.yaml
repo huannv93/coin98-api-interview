@@ -13,7 +13,7 @@ phases:
   build:
     commands:
       # Docker build
-      - docker build -t $RAW_SERVICE_NAME
+      - docker build -t $RAW_SERVICE_NAME .
       # Push container image to ECR
       - echo "Push $CONTAINER_NAME image to ECR"
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
