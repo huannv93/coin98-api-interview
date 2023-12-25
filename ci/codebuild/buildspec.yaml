@@ -9,7 +9,6 @@ phases:
     commands:
       - cd $SERVICE_LOCATION
       - docker --version
-      - go --version
 
   build:
     commands:
