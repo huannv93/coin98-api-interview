@@ -38,7 +38,9 @@ phases:
       - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json 
       - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
       - echo $IMAGE_URL
-      - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == ${SERVICE_NAME}) | .image) |= ${IMAGE_URL}' > taskdef.$SERVICE_NAME.json
+      # - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == ${SERVICE_NAME}) | .image) |= ${IMAGE_URL}' > taskdef.$SERVICE_NAME.json
+      - cat taskdef.raw.json | jq --argjson SERVICE_NAME "$SERVICE_NAME" --argjson IMAGE_URL "$IMAGE_URL" '(.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image) |= $IMAGE_URL' > "taskdef.${SERVICE_NAME}.json"
+
       - cat taskdef.$SERVICE_NAME.json
       - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.$SERVICE_NAME.yaml
       - cat appspec.$SERVICE_NAME.yaml
