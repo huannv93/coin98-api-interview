@@ -25,17 +25,24 @@ phases:
       - docker tag $RAW_SERVICE_NAME:latest $REPOSITORY_URL:$IMAGE_TAG
       - docker push $REPOSITORY_URL:$IMAGE_TAG
 
-      # Prepare ecs deployment
+      # Prepare ecs deployment with Blue-Green
       - cat cd/ecs/imagedefinitions.cd.json | envsubst > imagedefinitions.json
       - cat imagedefinitions.json
-      # - "printf 'version: 0.0\nResources:\n  - TargetService:\n      Type: AWS::ECS::Service\n      Properties:\n        TaskDefinition: <TASK_DEFINITION>\n        LoadBalancerInfo:\n          ContainerName: \"${container_name}\"\n          ContainerPort: ${container_port}' > appspec.yaml"
+
       - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.yaml
       - cat appspec.yaml
 
+      - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
+      - echo $IMAGE_URL
       - aws ecs describe-task-definition --output json --task-definition ${SERVICE_NAME} --query taskDefinition > template.json
       - jq '.containerDefinitions | map((select(.name == "${SERVICE_NAME}") | .image) |= "${IMAGE_URL}") | {"containerDefinitions":.}' template.json > template2.json
       - jq -s '.[0] * .[1]' template.json template2.json > taskdef.json
       - cat taskdef.json
+  post_build:
+    commands:
+      # Remove images 
+      - docker image rm "$RAW_SERVICE_NAME:latest" -f
+      - docker image rm "$REPOSITORY_URL:$IMAGE_TAG" -f
 artifacts:
   files:
     - imagedefinitions.json
