@@ -40,10 +40,10 @@ phases:
       - echo $IMAGE_URL
       # - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == ${SERVICE_NAME}) | .image) |= ${IMAGE_URL}' > taskdef.$SERVICE_NAME.json
       # - cat taskdef.raw.json | jq --argjson SERVICE_NAME "$SERVICE_NAME" --argjson IMAGE_URL "$IMAGE_URL" '(.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image) |= $IMAGE_URL' > "taskdef.${SERVICE_NAME}.json"
-      - cat taskdef.raw.json | jq --arg SERVICE_NAME "$SERVICE_NAME" --arg IMAGE_URL "$IMAGE_URL" '.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image = $IMAGE_URL' > "taskdef.json"
+      - cat taskdef.raw.json | jq --arg SERVICE_NAME "$SERVICE_NAME" --arg IMAGE_URL "$IMAGE_URL" '.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image = $IMAGE_URL' > "taskdef.${SERVICE_NAME}.json"
 
-      - cat taskdef.json
-      - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.yaml
+      - cat taskdef.${SERVICE_NAME}.json
+      - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.$SERVICE_NAME.yaml
       - cat appspec.$SERVICE_NAME.yaml
 
 
@@ -55,6 +55,6 @@ phases:
 
 artifacts:
   files:
-    - ./appspec.yaml
+    - ./appspec.$SERVICE_NAME.yaml
     - ./imagedefinitions.json
-    - ./taskdef.json
+    - ./taskdef.${SERVICE_NAME}.json
