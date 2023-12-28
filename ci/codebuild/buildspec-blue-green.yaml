@@ -30,31 +30,39 @@ phases:
       - cat imagedefinitions.json
       - cat cd/ecs/$RAW_SERVICE_NAME/taskdef.cd.json | envsubst > taskdef.json
       - cat taskdef.json
+      - "printf 'version: 0.0\nResources:\n  - TargetService:\n      Type: AWS::ECS::Service\n      Properties:\n        TaskDefinition: <TASK_DEFINITION>\n        LoadBalancerInfo:\n          ContainerName: \"${container_name}\"\n          ContainerPort: ${container_port}' > appspec.yaml"
+      - aws ecs describe-task-definition --output json --task-definition ${task_definition} --query taskDefinition > template.json
+      - jq '.containerDefinitions | map((select(.name == "${container_name}") | .image) |= "<IMAGE1_NAME>") | {"containerDefinitions":.}' template.json > template2.json
+      - jq -s '.[0] * .[1]' template.json template2.json > taskdef.json
+  artifacts:
+    files:
+      - imageDetail.json
+      - appspec.yaml
+      - taskdef.json
+#       # Blue-Green deployment for api
+#       - aws ecs describe-task-definition --task-definition $SERVICE_NAME > taskdef.temp.json
+#       - jq --version
+#       - cat taskdef.temp.json
+#       - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json 
+#       - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
+#       - echo $IMAGE_URL
+#       # - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == ${SERVICE_NAME}) | .image) |= ${IMAGE_URL}' > taskdef.$SERVICE_NAME.json
+#       # - cat taskdef.raw.json | jq --argjson SERVICE_NAME "$SERVICE_NAME" --argjson IMAGE_URL "$IMAGE_URL" '(.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image) |= $IMAGE_URL' > "taskdef.${SERVICE_NAME}.json"
+#       - cat taskdef.raw.json | jq --arg SERVICE_NAME "$SERVICE_NAME" --arg IMAGE_URL "$IMAGE_URL" '.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image = $IMAGE_URL' > "taskdef.${SERVICE_NAME}.json"
 
-      # Blue-Green deployment for api
-      - aws ecs describe-task-definition --task-definition $SERVICE_NAME > taskdef.temp.json
-      - jq --version
-      - cat taskdef.temp.json
-      - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json 
-      - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
-      - echo $IMAGE_URL
-      # - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == ${SERVICE_NAME}) | .image) |= ${IMAGE_URL}' > taskdef.$SERVICE_NAME.json
-      # - cat taskdef.raw.json | jq --argjson SERVICE_NAME "$SERVICE_NAME" --argjson IMAGE_URL "$IMAGE_URL" '(.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image) |= $IMAGE_URL' > "taskdef.${SERVICE_NAME}.json"
-      - cat taskdef.raw.json | jq --arg SERVICE_NAME "$SERVICE_NAME" --arg IMAGE_URL "$IMAGE_URL" '.containerDefinitions[] | select(.name == $SERVICE_NAME) | .image = $IMAGE_URL' > "taskdef.${SERVICE_NAME}.json"
-
-      - cat taskdef.${SERVICE_NAME}.json
-      - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.$SERVICE_NAME.yaml
-      - cat appspec.$SERVICE_NAME.yaml
+#       - cat taskdef.${SERVICE_NAME}.json
+#       - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.$SERVICE_NAME.yaml
+#       - cat appspec.$SERVICE_NAME.yaml
 
 
-  post_build:
-    commands:
-      # Remove images 
-      - docker image rm "$RAW_SERVICE_NAME:latest" -f
-      - docker image rm "$REPOSITORY_URL:$IMAGE_TAG" -f
+#   post_build:
+#     commands:
+#       # Remove images 
+#       - docker image rm "$RAW_SERVICE_NAME:latest" -f
+#       - docker image rm "$REPOSITORY_URL:$IMAGE_TAG" -f
 
-artifacts:
-  files:
-    - ./appspec.$SERVICE_NAME.yaml
-    - ./imagedefinitions.json
-    - ./taskdef.${SERVICE_NAME}.json
+# artifacts:
+#   files:
+#     - ./appspec.$SERVICE_NAME.yaml
+#     - ./imagedefinitions.json
+#     - ./taskdef.${SERVICE_NAME}.json
