@@ -36,7 +36,7 @@ phases:
       - jq -s '.[0] * .[1]' template.json template2.json > taskdef.json
 artifacts:
   files:
-    - imageDetail.json
+    - imagedefinitions.json
     - appspec.yaml
     - taskdef.json
 #       # Blue-Green deployment for api
