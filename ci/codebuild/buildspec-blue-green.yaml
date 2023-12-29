@@ -26,16 +26,17 @@ phases:
       - docker push $REPOSITORY_URL:$IMAGE_TAG
 
       # Prepare ecs deployment with Blue-Green
+      # Create imagedefinitions.json
       - cat cd/ecs/imagedefinitions.cd.json | envsubst > imagedefinitions.json
       - cat imagedefinitions.json
-
+      # Create appspec.yaml
       - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.yaml
       - cat appspec.yaml
-
+      # Create taskdef.json
       - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
       - echo $IMAGE_URL
       - aws ecs describe-task-definition --output json --task-definition ${SERVICE_NAME} --query taskDefinition > template.json
-      - jq '.containerDefinitions | map((select(.name == "${SERVICE_NAME}") | .image) |= "${IMAGE_URL}") | {"containerDefinitions":.}' template.json > template2.json
+      - jq '.containerDefinitions | map((select(.name == "${SERVICE_NAME}") | .image) |= "${ENV.IMAGE_URL}") | {"containerDefinitions":.}' template.json > template2.json
       - jq -s '.[0] * .[1]' template.json template2.json > taskdef.json
       - cat taskdef.json
   post_build:
