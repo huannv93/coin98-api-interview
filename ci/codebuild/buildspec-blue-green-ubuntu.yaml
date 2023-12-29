@@ -33,27 +33,23 @@ phases:
       - docker tag $RAW_SERVICE_NAME:latest $REPOSITORY_URL:$IMAGE_TAG
       - docker push $REPOSITORY_URL:$IMAGE_TAG
 
-      # Prepare ecs deployment
+      # Prepare ecs deployment with Blue-Green
+      # Create imagedefinitions.json
       - cat cd/ecs/imagedefinitions.cd.json | envsubst > imagedefinitions.json
       - cat imagedefinitions.json
-      - cat cd/ecs/$RAW_SERVICE_NAME/taskdef.cd.json | envsubst > taskdef.json
-      - cat taskdef.json
+      # Create appspec.yaml
+      - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.yaml
+      - cat appspec.yaml
 
-      # Blue-Green deployment for api
+      #  # Create taskdef.json
       - aws ecs describe-task-definition --task-definition $SERVICE_NAME > taskdef.temp.json
-      - jq --version
       - cat taskdef.temp.json
-      - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json 
+      - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json
       - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
       - echo $IMAGE_URL
-      - cat taskdef.raw.json
       - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef.$SERVICE_NAME.json
-
-    
-
       - cat taskdef.$SERVICE_NAME.json
-      - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.$SERVICE_NAME.yaml
-      - cat appspec.$SERVICE_NAME.yaml
+
 
 
   post_build:
