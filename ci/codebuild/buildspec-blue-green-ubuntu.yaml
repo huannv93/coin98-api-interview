@@ -45,7 +45,7 @@ phases:
       - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
       - echo $IMAGE_URL
       - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef.json
-      - cat taskdef.$SERVICE_NAME.json
+      - cat taskdef.json
 
 
 
