@@ -26,7 +26,7 @@ func main() {
 	app.Use(logger.New())
 
 	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.Status(200).JSON(fiber.Map{"message": "OK", "version": "v3"})
+		return c.Status(200).JSON(fiber.Map{"message": "OK", "version": "v4"})
 	})
 
 	v1 := app.Group("/v1")
