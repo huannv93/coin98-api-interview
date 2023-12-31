@@ -57,6 +57,9 @@ phases:
       - cat taskdef_$REGION_SECONDARY_1.json
 
 
+      - ls -la 
+
+
 
 
   post_build:
