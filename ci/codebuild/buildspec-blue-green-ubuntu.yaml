@@ -60,16 +60,13 @@ phases:
 
       # TODO: IMPROVE IF COMMAND FAILS
       # # Create taskdef.json on SECONDARY_2 Region
-      - |
-        set -e
-        set -o pipefail
-        aws ecs describe-task-definition --task-definition $SERVICE_NAME --region $REGION_SECONDARY_2 > taskdef.temp.json 2> error.log || true
-        cat taskdef.temp.json || true
-        cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json || true
-        export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG || true
-        echo $IMAGE_URL || true
-        cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef_$REGION_SECONDARY_1.json || true
-        cat taskdef_$REGION_SECONDARY_2.json || true
+      - aws ecs describe-task-definition --task-definition $SERVICE_NAME --region $REGION_SECONDARY_2 > taskdef.temp.json 2> error.log
+      - cat taskdef.temp.json
+      - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json
+      - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
+      - echo $IMAGE_URL
+      - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef_$REGION_SECONDARY_2.json
+      - cat taskdef_$REGION_SECONDARY_2.json
 
       # - ls -la 
 
