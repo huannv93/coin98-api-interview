@@ -45,7 +45,7 @@ phases:
       - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
       - echo $IMAGE_URL
       - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskde_$REGION_PRIMARY.json
-      - cat taskde_$REGION_PRIMARY.json
+      - cat taskdef_$REGION_PRIMARY.json
 
       # Create taskdef.json on SECONDARY_1 Region
       - aws ecs describe-task-definition --task-definition $SERVICE_NAME --region $REGION_SECONDARY_1 > taskdef.temp.json
@@ -72,5 +72,5 @@ artifacts:
   files:
     - ./appspec.yaml
     - ./imagedefinitions.json
-    - ./taskde_$REGION_PRIMARY.json
+    - ./taskdef_$REGION_PRIMARY.json
     - ./taskdef_$REGION_SECONDARY_1.json
