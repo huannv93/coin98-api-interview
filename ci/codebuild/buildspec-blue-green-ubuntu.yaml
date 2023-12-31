@@ -38,14 +38,24 @@ phases:
       - cat cd/codedeploy/appspec.cd.yaml | envsubst > appspec.yaml
       - cat appspec.yaml
 
-      # Create taskdef.json
+      # Create taskdef.json on PRIMARY Region
       - aws ecs describe-task-definition --task-definition $SERVICE_NAME --region $REGION_PRIMARY > taskdef.temp.json
       - cat taskdef.temp.json
       - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json
       - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
       - echo $IMAGE_URL
-      - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef.json
-      - cat taskdef.json
+      - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskde_$REGION_PRIMARY.json
+      - cat taskde_$REGION_PRIMARY.json
+
+      # Create taskdef.json on SECONDARY_1 Region
+      - aws ecs describe-task-definition --task-definition $SERVICE_NAME --region $REGION_SECONDARY_1 > taskdef.temp.json
+      - cat taskdef.temp.json
+      - cat taskdef.temp.json | jq '.taskDefinition'| jq 'del(.registeredAt, .registeredBy, .requiresCompatibilities, .compatibilities, .requiresAttributes, .placementConstraints, .status, .revision, .taskDefinitionArn)' > taskdef.raw.json
+      - export IMAGE_URL=$REPOSITORY_URL:$IMAGE_TAG
+      - echo $IMAGE_URL
+      - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef_$REGION_SECONDARY_1.json
+      - cat taskdef_$REGION_SECONDARY_1.json
+
 
 
 
@@ -59,4 +69,5 @@ artifacts:
   files:
     - ./appspec.yaml
     - ./imagedefinitions.json
-    - ./taskdef.json
+    - ./taskde_$REGION_PRIMARY.json
+    - ./taskdef_$REGION_SECONDARY_1.json
