@@ -17,6 +17,7 @@ phases:
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
 
   build:
+    on-failure: ABORT
     commands:
       # Docker build
       - docker build -t $RAW_SERVICE_NAME .
@@ -56,6 +57,8 @@ phases:
       - cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef_$REGION_SECONDARY_1.json
       - cat taskdef_$REGION_SECONDARY_1.json
       
+
+      # TODO: IMPROVE IF COMMAND FAILS
       # # Create taskdef.json on SECONDARY_2 Region
       - |
         set -e
@@ -68,7 +71,7 @@ phases:
         cat taskdef.raw.json | jq '(.containerDefinitions[] | select(.name == $ENV.SERVICE_NAME) | .image) |= $ENV.IMAGE_URL' > taskdef_$REGION_SECONDARY_1.json || true
         cat taskdef_$REGION_SECONDARY_2.json || true
 
-      - ls -la 
+      # - ls -la 
 
 
 
